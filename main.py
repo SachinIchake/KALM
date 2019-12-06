@@ -11,7 +11,7 @@ import model
 from utils import batchify, get_batch, repackage_hidden
 
 parser = argparse.ArgumentParser(description='PyTorch PennTreeBank RNN/LSTM Language Model')
-parser.add_argument('--data', type=str, default='data/penn/',
+parser.add_argument('--data', type=str, default='data/recipe_ori/',
                     help='location of the data corpus')
 parser.add_argument('--model', type=str, default='LSTM',
                     help='type of recurrent net (LSTM, QRNN, GRU)')
@@ -25,9 +25,9 @@ parser.add_argument('--lr', type=float, default=30,
                     help='initial learning rate')
 parser.add_argument('--clip', type=float, default=0.25,
                     help='gradient clipping')
-parser.add_argument('--epochs', type=int, default=8000,
+parser.add_argument('--epochs', type=int, default=50,
                     help='upper epoch limit')
-parser.add_argument('--batch_size', type=int, default=80, metavar='N',
+parser.add_argument('--batch_size', type=int, default=64, metavar='N',
                     help='batch size')
 parser.add_argument('--bptt', type=int, default=70,
                     help='sequence length')
@@ -45,7 +45,7 @@ parser.add_argument('--seed', type=int, default=1111,
                     help='random seed')
 parser.add_argument('--nonmono', type=int, default=5,
                     help='random seed')
-parser.add_argument('--cuda', action='store_false',
+parser.add_argument('--cuda', action='store_false',default=False,
                     help='use CUDA')
 parser.add_argument('--log-interval', type=int, default=200, metavar='N',
                     help='report interval')
@@ -65,7 +65,6 @@ parser.add_argument('--optimizer', type=str,  default='sgd',
 parser.add_argument('--when', nargs="+", type=int, default=[-1],
                     help='When (which epochs) to divide the learning rate by 10 - accepts multiple')
 args = parser.parse_args()
-args.tied = True
 
 # Set the random seed manually for reproducibility.
 np.random.seed(args.seed)
@@ -114,7 +113,7 @@ from splitcross import SplitCrossEntropyLoss
 criterion = None
 
 ntokens = len(corpus.dictionary)
-model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.dropouth, args.dropouti, args.dropoute, args.wdrop, args.tied)
+model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.dropouth, args.dropouti, args.dropoute, args.wdrop)
 ###
 if args.resume:
     print('Resuming model ...')
@@ -242,7 +241,13 @@ try:
             tmp = {}
             for prm in model.parameters():
                 tmp[prm] = prm.data.clone()
-                prm.data = optimizer.state[prm]['ax'].clone()
+                if 'ax' in optimizer.state[prm]:
+                    prm.data = optimizer.state[prm]['ax'].clone()
+
+            # tmp = {}
+            # for prm in model.parameters():
+            #     tmp[prm] = prm.data.clone()
+            #     prm.data = optimizer.state[prm]['ax'].clone()
 
             val_loss2 = evaluate(val_data)
             print('-' * 89)
