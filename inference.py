@@ -5,9 +5,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
-import model
+import model_bkp1
 import data
-import model as model_file
+import model_bkp1 as model_file
 
 from utils import batchify, get_batch, repackage_hidden
 
@@ -102,8 +102,8 @@ from splitcross import SplitCrossEntropyLoss
 criterion = None
 
 ntokens = len(corpus.dictionary)
-model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.dropouth,
-                       args.dropouti, args.dropoute, args.wdrop)
+model = model_bkp1.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.dropouth,
+                            args.dropouti, args.dropoute, args.wdrop)
 
 ###
 criterion = nn.CrossEntropyLoss()

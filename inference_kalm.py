@@ -5,10 +5,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
-import model
-from model import RNNModel
+import model_bkp1
+from model_bkp1 import RNNModel
 import data
-import model as model_file
+import model_bkp1 as model_file
 
 from utils import batchify, get_batch, repackage_hidden
 
@@ -85,17 +85,6 @@ class Inferance():
         self.test_data = batchify(self.corpus.test, self.test_batch_size, args)
         self.criterion = None
 
-    def wordEmbedding(self,vocab,dim):
-        embeddings = np.zeros([len(vocab), dim])
-        with open("D:/Git/Embeddings/glove.6B/glove.6B.100d.txt", 'r') as f:
-            for line in f:
-                values = line.split()
-                word = values[0]
-                vector = np.asarray(values[1:], "float32")
-                if word in vocab:
-                    word_idx = vocab[word]
-                    embeddings[word_idx] = vector
-        return embeddings
 
 
 

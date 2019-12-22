@@ -7,7 +7,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 
 import data
-import model
+import model_bkp1
 
 from utils import batchify, get_batch, repackage_hidden
 
