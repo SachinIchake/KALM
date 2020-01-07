@@ -248,6 +248,10 @@ def train():
     ntokens = len(corpus.dictionary)
     hidden = model.init_hidden(args.batch_size)
     batch, i = 0, 0
+    inputTypes = {'a':0,'b':1,'c':2,'d':3,'e':4}
+
+
+
     # entityTypes = torch.IntTensor([ntokens +5, ntokens +5,ntokens +5,ntokens +5])
     while i < train_data.size(0) - 1 - 1:
         bptt = args.bptt if np.random.random() < 0.95 else args.bptt / 2.
@@ -266,7 +270,7 @@ def train():
         hidden = repackage_hidden(hidden)
         optimizer.zero_grad()
 
-        output, hidden,resultOrg,resultLoc,resultPer,resultGen,resultMsc, rnn_hs, dropped_rnn_hs = model(data, vOrg, vLoc, vPerson, vGeneral, vMisc, hidden,
+        output, hidden,resultOrg,resultLoc,resultPer,resultGen,resultMsc, rnn_hs, dropped_rnn_hs = model(data,inputTypes, vOrg, vLoc, vPerson, vGeneral, vMisc, hidden,
                                                        return_h=True)
         # raw_loss = criterion(model.decoder.weight, model.decoder.bias, output, targets)
         # raw_loss = len(data) * criterion(output, targets)

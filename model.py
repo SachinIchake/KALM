@@ -19,6 +19,7 @@ class RNNModel(nn.Module):
         self.hdrop = nn.Dropout(dropouth)
         self.drop = nn.Dropout(dropout)
         self.encoder = nn.Embedding(ntoken, ninp)
+        self.typeEmbedding = nn.Embedding(5, 100)
         # self.orgEmb = nn.Embedding(vOrgLen,ntypesDims)
         # self.locEmb = nn.Embedding(vLocLen, ntypesDims)
         # self.perEmb = nn.Embedding(vPersonLen, ntypesDims)
@@ -41,6 +42,7 @@ class RNNModel(nn.Module):
         self.perDecoder = nn.Linear(nhid, vPersonLen)
         self.genDecoder = nn.Linear(nhid, vGeneralLen)
         self.mscDecoder = nn.Linear(nhid, vMiscLen)
+        self.lowerHt = nn.Linear(nhid, 100)
 
         # Optionally tie weights as in:
         # "Using the Output Embedding to Improve Language Models" (Press & Wolf 2016)
@@ -73,14 +75,15 @@ class RNNModel(nn.Module):
         self.encoder.weight.data.uniform_(-initrange, initrange)
         self.decoder.bias.data.fill_(0)
         self.decoder.weight.data.uniform_(-initrange, initrange)
+        self.typeEmbedding.weight.data.uniform_(-initrange, initrange)
 
-    def forward(self, input, vOrg, vLoc, vPerson, vGeneral, vMisc, hidden, return_h=False):
+    def forward(self, input, inputTypes, vOrg, vLoc, vPerson, vGeneral, vMisc, hidden, return_h=False):
         emb = embedded_dropout(self.encoder, input, dropout=self.dropoute if self.training else 0)
         emb = self.lockdrop(emb, self.dropouti)
-        raw_output = emb
-        # raw_output = torch.cat((emb, emb_type), len(emb.size()) - 1 + len(emb_type.size())-1)
+        lookup_tensor = torch.tensor([inputTypes[w] for w in inputTypes.keys()], dtype=torch.long)
 
-        # raw_output = emb
+        emb_type = self.typeEmbedding(lookup_tensor)
+        raw_output = emb
         new_hidden = []
         # raw_output, hidden = self.rnn(emb, hidden)
         raw_outputs = []
@@ -99,14 +102,15 @@ class RNNModel(nn.Module):
         output = self.lockdrop(raw_output, self.dropout)
         outputs.append(output)
 
-      # result_1 = output.view(output.size(0)*output.size(1), output.size(2))
         decoded = self.decoder(output.view(output.size(0) * output.size(1), output.size(2)))
-
         orgDecoder = self.orgDecoder(output.view(output.size(0) * output.size(1), output.size(2)))
         locDecoder = self.locDecoder(output.view(output.size(0) * output.size(1), output.size(2)))
         perDecoder = self.perDecoder(output.view(output.size(0) * output.size(1), output.size(2)))
         genDecoder = self.genDecoder(output.view(output.size(0) * output.size(1), output.size(2)))
         mscDecoder = self.mscDecoder(output.view(output.size(0) * output.size(1), output.size(2)))
+        lowerHt = self.lowerHt(output.view(output.size(0) * output.size(1), output.size(2)))
+
+        wordEmbedding = torch.matmul(lowerHt, torch.t(emb_type))
 
         resultAll = decoded.view(output.size(0), output.size(1), decoded.size(1))
         resultOrgAll = orgDecoder.view(output.size(0), output.size(1), orgDecoder.size(1))
@@ -114,14 +118,6 @@ class RNNModel(nn.Module):
         resultPerAll = perDecoder.view(output.size(0), output.size(1), perDecoder.size(1))
         resultGenAll = genDecoder.view(output.size(0), output.size(1), genDecoder.size(1))
         resultMScAll = mscDecoder.view(output.size(0), output.size(1), mscDecoder.size(1))
-
-        # OrgSoftmax= nn.Softmax(resultOrgAll)
-        # OrgSoftmax = nn.Softmax(resultOrgAll)
-        # OrgSoftmax = nn.Softmax(resultOrgAll)
-        # OrgSoftmax = nn.Softmax(resultOrgAll)
-        # OrgSoftmax = nn.Softmax(resultOrgAll)
-        # OrgSoftmax = nn.Softmax(resultOrgAll)
-
 
         if return_h:
             return resultAll, resultOrgAll, resultLocAll, resultPerAll, resultGenAll, resultMScAll, hidden, raw_outputs, outputs
