@@ -43,7 +43,7 @@ class Corpus(object):
             for line in f:
                 if line == '\n':
                     self.dictionary.add_word('<eos>')
-                    tokens += 1
+                    # tokens += 1
                     # print(maxSentenceSize )
                     if maxSentenceSize > SentenceSize:
                         SentenceSize = maxSentenceSize
